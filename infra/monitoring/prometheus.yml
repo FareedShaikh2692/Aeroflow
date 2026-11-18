@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: aeroflow
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - auth-service:8080
+          - flight-service:8080
+          - passenger-service:8080
+          - booking-service:8080
+          - checkin-service:8080
+          - notification-service:8080
+          - reporting-service:8080
+          - gateway:8080

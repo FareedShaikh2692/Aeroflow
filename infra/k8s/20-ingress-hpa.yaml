@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aeroflow-api
+  namespace: aeroflow
+  annotations: { cert-manager.io/cluster-issuer: letsencrypt }
+spec:
+  ingressClassName: nginx
+  tls: [{ hosts: [api.aeroflow.example.com], secretName: aeroflow-api-tls }]
+  rules:
+    - host: api.aeroflow.example.com
+      http: { paths: [{ path: /, pathType: Prefix, backend: { service: { name: gateway, port: { number: 80 } } } }] }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: booking-service, namespace: aeroflow }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: booking-service }
+  minReplicas: 3
+  maxReplicas: 10
+  metrics: [{ type: Resource, resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } } }]
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: booking-service, namespace: aeroflow }
+spec: { minAvailable: 2, selector: { matchLabels: { app: booking-service } } }

@@ -1,0 +1,216 @@
+# Render Blueprint (https://render.com/docs/blueprint-spec). Deploy: Render dashboard -> New -> Blueprint -> this repo.
+# Kafka is not offered by Render: point KAFKA_* at a managed broker (Confluent Cloud, Aiven, Redpanda Cloud).
+# One Postgres instance, one schema per service (DB_SCHEMA + currentSchema) - services still never share tables.
+envVarGroups:
+  - name: aeroflow-shared
+    envVars:
+      - { key: JWT_SECRET, generateValue: true }
+      - { key: KAFKA_BOOTSTRAP_SERVERS, sync: false }
+      - { key: KAFKA_USERNAME, sync: false }
+      - { key: KAFKA_PASSWORD, sync: false }
+
+databases:
+  - { name: aeroflow-db, databaseName: aeroflow, plan: basic-256mb }
+
+services:
+  - type: keyvalue
+    name: aeroflow-redis
+    plan: starter
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+
+  - type: web
+    name: aeroflow-gateway
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /actuator/health/readiness
+    envVars:
+      - { key: SERVICE, value: gateway }
+      - { key: PORT, value: "10000" }
+      - { key: CORS_ALLOWED_ORIGINS, sync: false }
+      - { key: CORS_ALLOWED_ORIGIN_PATTERNS, value: "https://*.vercel.app" }
+      - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
+      - { key: AUTH_SERVICE_URL, value: "http://aeroflow-auth-service:10000" }
+      - { key: FLIGHT_SERVICE_URL, value: "http://aeroflow-flight-service:10000" }
+      - { key: PASSENGER_SERVICE_URL, value: "http://aeroflow-passenger-service:10000" }
+      - { key: BOOKING_SERVICE_URL, value: "http://aeroflow-booking-service:10000" }
+      - { key: CHECKIN_SERVICE_URL, value: "http://aeroflow-checkin-service:10000" }
+      - { key: NOTIFICATION_SERVICE_URL, value: "http://aeroflow-notification-service:10000" }
+      - { key: REPORTING_SERVICE_URL, value: "http://aeroflow-reporting-service:10000" }
+
+  - type: pserv
+    name: aeroflow-auth-service
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - { key: SERVICE, value: auth-service }
+      - { key: PORT, value: "10000" }
+      - { key: DB_SCHEMA, value: auth }
+      - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=auth" }
+      - { key: JWT_SECRET, fromGroup: aeroflow-shared }
+      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
+      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
+      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
+      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
+      - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
+      - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }
+      - { key: DB_HOST, fromDatabase: { name: aeroflow-db, property: host } }
+      - { key: FLIGHT_SERVICE_URL, value: "http://aeroflow-flight-service:10000" }
+      - { key: BOOKING_SERVICE_URL, value: "http://aeroflow-booking-service:10000" }
+
+  - type: pserv
+    name: aeroflow-flight-service
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - { key: SERVICE, value: flight-service }
+      - { key: PORT, value: "10000" }
+      - { key: DB_SCHEMA, value: flight }
+      - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=flight" }
+      - { key: JWT_SECRET, fromGroup: aeroflow-shared }
+      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
+      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
+      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
+      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
+      - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
+      - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }
+      - { key: DB_HOST, fromDatabase: { name: aeroflow-db, property: host } }
+      - { key: FLIGHT_SERVICE_URL, value: "http://aeroflow-flight-service:10000" }
+      - { key: BOOKING_SERVICE_URL, value: "http://aeroflow-booking-service:10000" }
+
+  - type: pserv
+    name: aeroflow-passenger-service
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - { key: SERVICE, value: passenger-service }
+      - { key: PORT, value: "10000" }
+      - { key: DB_SCHEMA, value: passenger }
+      - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=passenger" }
+      - { key: JWT_SECRET, fromGroup: aeroflow-shared }
+      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
+      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
+      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
+      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
+      - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
+      - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }
+      - { key: DB_HOST, fromDatabase: { name: aeroflow-db, property: host } }
+      - { key: FLIGHT_SERVICE_URL, value: "http://aeroflow-flight-service:10000" }
+      - { key: BOOKING_SERVICE_URL, value: "http://aeroflow-booking-service:10000" }
+
+  - type: pserv
+    name: aeroflow-booking-service
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - { key: SERVICE, value: booking-service }
+      - { key: PORT, value: "10000" }
+      - { key: DB_SCHEMA, value: booking }
+      - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=booking" }
+      - { key: JWT_SECRET, fromGroup: aeroflow-shared }
+      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
+      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
+      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
+      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
+      - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
+      - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }
+      - { key: DB_HOST, fromDatabase: { name: aeroflow-db, property: host } }
+      - { key: FLIGHT_SERVICE_URL, value: "http://aeroflow-flight-service:10000" }
+      - { key: BOOKING_SERVICE_URL, value: "http://aeroflow-booking-service:10000" }
+
+  - type: pserv
+    name: aeroflow-checkin-service
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - { key: SERVICE, value: checkin-service }
+      - { key: PORT, value: "10000" }
+      - { key: DB_SCHEMA, value: checkin }
+      - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=checkin" }
+      - { key: JWT_SECRET, fromGroup: aeroflow-shared }
+      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
+      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
+      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
+      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
+      - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
+      - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }
+      - { key: DB_HOST, fromDatabase: { name: aeroflow-db, property: host } }
+      - { key: FLIGHT_SERVICE_URL, value: "http://aeroflow-flight-service:10000" }
+      - { key: BOOKING_SERVICE_URL, value: "http://aeroflow-booking-service:10000" }
+
+  - type: pserv
+    name: aeroflow-notification-service
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - { key: SERVICE, value: notification-service }
+      - { key: PORT, value: "10000" }
+      - { key: DB_SCHEMA, value: notification }
+      - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=notification" }
+      - { key: JWT_SECRET, fromGroup: aeroflow-shared }
+      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
+      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
+      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
+      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
+      - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
+      - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }
+      - { key: DB_HOST, fromDatabase: { name: aeroflow-db, property: host } }
+      - { key: FLIGHT_SERVICE_URL, value: "http://aeroflow-flight-service:10000" }
+      - { key: BOOKING_SERVICE_URL, value: "http://aeroflow-booking-service:10000" }
+
+  - type: pserv
+    name: aeroflow-reporting-service
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - { key: SERVICE, value: reporting-service }
+      - { key: PORT, value: "10000" }
+      - { key: DB_SCHEMA, value: reporting }
+      - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=reporting" }
+      - { key: JWT_SECRET, fromGroup: aeroflow-shared }
+      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
+      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
+      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
+      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
+      - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
+      - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }
+      - { key: DB_HOST, fromDatabase: { name: aeroflow-db, property: host } }
+      - { key: FLIGHT_SERVICE_URL, value: "http://aeroflow-flight-service:10000" }
+      - { key: BOOKING_SERVICE_URL, value: "http://aeroflow-booking-service:10000" }

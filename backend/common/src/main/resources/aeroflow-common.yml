@@ -18,6 +18,10 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+    # Optional schema-per-service mode for managed Postgres plans with a single database:
+    # DB_SCHEMA=booking and DB_URL=jdbc:postgresql://host:5432/db?currentSchema=booking
+    schemas: ${DB_SCHEMA:public}
+    create-schemas: true
   jackson:
     default-property-inclusion: non_null
     serialization:

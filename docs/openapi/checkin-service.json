@@ -1,0 +1,509 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "AeroFlow checkin-service API",
+        "description": "AeroFlow Airline Operations & Passenger Management Platform",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8085",
+            "description": "Generated server url"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ],
+    "paths": {
+        "/api/checkin/seat": {
+            "put": {
+                "tags": [
+                    "Check-in"
+                ],
+                "operationId": "seat",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SeatRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Booking"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/checkin/retrieve": {
+            "post": {
+                "tags": [
+                    "Check-in"
+                ],
+                "summary": "Retrieve booking for check-in (PNR + last name)",
+                "operationId": "retrieve",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RetrieveRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CheckinView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/checkin/complete": {
+            "post": {
+                "tags": [
+                    "Check-in"
+                ],
+                "summary": "Check in selected passengers and issue boarding passes",
+                "operationId": "complete",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CompleteRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CheckinView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/checkin/boarding-pass": {
+            "post": {
+                "tags": [
+                    "Check-in"
+                ],
+                "summary": "Download a boarding pass as PDF",
+                "operationId": "boardingPass",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BoardingPassRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "byte"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/checkin": {
+            "get": {
+                "tags": [
+                    "Check-in"
+                ],
+                "operationId": "list",
+                "parameters": [
+                    {
+                        "name": "flightId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PageResponseBoardingPass"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "SeatRequest": {
+                "required": [
+                    "lastName",
+                    "passengerId",
+                    "pnr",
+                    "seatNumber"
+                ],
+                "type": "object",
+                "properties": {
+                    "pnr": {
+                        "pattern": "^[A-Za-z0-9]{6}$",
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "maxLength": 80,
+                        "minLength": 0,
+                        "type": "string"
+                    },
+                    "passengerId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "seatNumber": {
+                        "pattern": "^\\d{1,2}[A-K]$",
+                        "type": "string"
+                    }
+                }
+            },
+            "Booking": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "pnr": {
+                        "type": "string"
+                    },
+                    "flightId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "flightNumber": {
+                        "type": "string"
+                    },
+                    "origin": {
+                        "type": "string"
+                    },
+                    "destination": {
+                        "type": "string"
+                    },
+                    "departureTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "arrivalTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "totalAmount": {
+                        "type": "number"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "contactEmail": {
+                        "type": "string"
+                    },
+                    "passengers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Passenger"
+                        }
+                    }
+                }
+            },
+            "Passenger": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "firstName": {
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "type": "string"
+                    },
+                    "cabin": {
+                        "type": "string"
+                    },
+                    "seatNumber": {
+                        "type": "string"
+                    },
+                    "checkedIn": {
+                        "type": "boolean"
+                    },
+                    "email": {
+                        "type": "string"
+                    }
+                }
+            },
+            "RetrieveRequest": {
+                "required": [
+                    "lastName",
+                    "pnr"
+                ],
+                "type": "object",
+                "properties": {
+                    "pnr": {
+                        "pattern": "^[A-Za-z0-9]{6}$",
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "maxLength": 80,
+                        "minLength": 0,
+                        "type": "string"
+                    }
+                }
+            },
+            "BoardingPass": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "passengerId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "passengerName": {
+                        "type": "string"
+                    },
+                    "pnr": {
+                        "type": "string"
+                    },
+                    "flightNumber": {
+                        "type": "string"
+                    },
+                    "origin": {
+                        "type": "string"
+                    },
+                    "destination": {
+                        "type": "string"
+                    },
+                    "departureTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "seatNumber": {
+                        "type": "string"
+                    },
+                    "cabin": {
+                        "type": "string"
+                    },
+                    "boardingPassNumber": {
+                        "type": "string"
+                    },
+                    "sequenceNumber": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "boardingGroup": {
+                        "type": "string"
+                    },
+                    "gate": {
+                        "type": "string"
+                    },
+                    "boardingTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "checkedInAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "channel": {
+                        "type": "string"
+                    }
+                }
+            },
+            "CheckinView": {
+                "type": "object",
+                "properties": {
+                    "booking": {
+                        "$ref": "#/components/schemas/Booking"
+                    },
+                    "eligibility": {
+                        "$ref": "#/components/schemas/Eligibility"
+                    },
+                    "boardingPasses": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BoardingPass"
+                        }
+                    }
+                }
+            },
+            "Eligibility": {
+                "type": "object",
+                "properties": {
+                    "open": {
+                        "type": "boolean"
+                    },
+                    "opensAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "closesAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                }
+            },
+            "CompleteRequest": {
+                "required": [
+                    "lastName",
+                    "passengerIds",
+                    "pnr"
+                ],
+                "type": "object",
+                "properties": {
+                    "pnr": {
+                        "pattern": "^[A-Za-z0-9]{6}$",
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "maxLength": 80,
+                        "minLength": 0,
+                        "type": "string"
+                    },
+                    "passengerIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    "acceptDeclaration": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "BoardingPassRequest": {
+                "required": [
+                    "boardingPassNumber",
+                    "lastName",
+                    "pnr"
+                ],
+                "type": "object",
+                "properties": {
+                    "pnr": {
+                        "pattern": "^[A-Za-z0-9]{6}$",
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "maxLength": 80,
+                        "minLength": 0,
+                        "type": "string"
+                    },
+                    "boardingPassNumber": {
+                        "maxLength": 20,
+                        "minLength": 0,
+                        "type": "string"
+                    }
+                }
+            },
+            "PageResponseBoardingPass": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BoardingPass"
+                        }
+                    },
+                    "page": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalElements": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "totalPages": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    }
+}

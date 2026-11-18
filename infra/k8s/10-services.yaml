@@ -1,0 +1,262 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: gateway, namespace: aeroflow, labels: { app: gateway, app.kubernetes.io/part-of: aeroflow } }
+spec:
+  replicas: 2
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: gateway } }
+  template:
+    metadata:
+      labels: { app: gateway }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/path: /actuator/prometheus, prometheus.io/port: "8080" }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 100, fsGroup: 101 }
+      containers:
+        - name: gateway
+          image: ghcr.io/OWNER/aeroflow-gateway:latest
+          ports: [{ containerPort: 8080, name: http }]
+          envFrom: [{ configMapRef: { name: aeroflow-config } }, { secretRef: { name: aeroflow-secrets } }]
+          env:
+            - { name: PORT, value: "8080" }
+          resources: { requests: { cpu: 100m, memory: 384Mi }, limits: { memory: 640Mi } }
+          readinessProbe: { httpGet: { path: /actuator/health/readiness, port: http }, initialDelaySeconds: 20, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /actuator/health/liveness, port: http }, initialDelaySeconds: 60, periodSeconds: 20 }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: gateway, namespace: aeroflow }
+spec: { selector: { app: gateway }, ports: [{ port: 80, targetPort: http, name: http }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: auth-service, namespace: aeroflow, labels: { app: auth-service, app.kubernetes.io/part-of: aeroflow } }
+spec:
+  replicas: 2
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: auth-service } }
+  template:
+    metadata:
+      labels: { app: auth-service }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/path: /actuator/prometheus, prometheus.io/port: "8080" }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 100, fsGroup: 101 }
+      containers:
+        - name: auth-service
+          image: ghcr.io/OWNER/aeroflow-auth-service:latest
+          ports: [{ containerPort: 8080, name: http }]
+          envFrom: [{ configMapRef: { name: aeroflow-config } }, { secretRef: { name: aeroflow-secrets } }]
+          env:
+            - { name: PORT, value: "8080" }
+            - { name: DB_URL, value: "jdbc:postgresql://$(DB_HOST):5432/aeroflow_auth" }
+          resources: { requests: { cpu: 100m, memory: 384Mi }, limits: { memory: 640Mi } }
+          readinessProbe: { httpGet: { path: /actuator/health/readiness, port: http }, initialDelaySeconds: 20, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /actuator/health/liveness, port: http }, initialDelaySeconds: 60, periodSeconds: 20 }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: auth-service, namespace: aeroflow }
+spec: { selector: { app: auth-service }, ports: [{ port: 80, targetPort: http, name: http }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: flight-service, namespace: aeroflow, labels: { app: flight-service, app.kubernetes.io/part-of: aeroflow } }
+spec:
+  replicas: 2
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: flight-service } }
+  template:
+    metadata:
+      labels: { app: flight-service }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/path: /actuator/prometheus, prometheus.io/port: "8080" }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 100, fsGroup: 101 }
+      containers:
+        - name: flight-service
+          image: ghcr.io/OWNER/aeroflow-flight-service:latest
+          ports: [{ containerPort: 8080, name: http }]
+          envFrom: [{ configMapRef: { name: aeroflow-config } }, { secretRef: { name: aeroflow-secrets } }]
+          env:
+            - { name: PORT, value: "8080" }
+            - { name: DB_URL, value: "jdbc:postgresql://$(DB_HOST):5432/aeroflow_flight" }
+          resources: { requests: { cpu: 100m, memory: 384Mi }, limits: { memory: 640Mi } }
+          readinessProbe: { httpGet: { path: /actuator/health/readiness, port: http }, initialDelaySeconds: 20, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /actuator/health/liveness, port: http }, initialDelaySeconds: 60, periodSeconds: 20 }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: flight-service, namespace: aeroflow }
+spec: { selector: { app: flight-service }, ports: [{ port: 80, targetPort: http, name: http }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: passenger-service, namespace: aeroflow, labels: { app: passenger-service, app.kubernetes.io/part-of: aeroflow } }
+spec:
+  replicas: 1
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: passenger-service } }
+  template:
+    metadata:
+      labels: { app: passenger-service }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/path: /actuator/prometheus, prometheus.io/port: "8080" }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 100, fsGroup: 101 }
+      containers:
+        - name: passenger-service
+          image: ghcr.io/OWNER/aeroflow-passenger-service:latest
+          ports: [{ containerPort: 8080, name: http }]
+          envFrom: [{ configMapRef: { name: aeroflow-config } }, { secretRef: { name: aeroflow-secrets } }]
+          env:
+            - { name: PORT, value: "8080" }
+            - { name: DB_URL, value: "jdbc:postgresql://$(DB_HOST):5432/aeroflow_passenger" }
+          resources: { requests: { cpu: 100m, memory: 384Mi }, limits: { memory: 640Mi } }
+          readinessProbe: { httpGet: { path: /actuator/health/readiness, port: http }, initialDelaySeconds: 20, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /actuator/health/liveness, port: http }, initialDelaySeconds: 60, periodSeconds: 20 }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: passenger-service, namespace: aeroflow }
+spec: { selector: { app: passenger-service }, ports: [{ port: 80, targetPort: http, name: http }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: booking-service, namespace: aeroflow, labels: { app: booking-service, app.kubernetes.io/part-of: aeroflow } }
+spec:
+  replicas: 3
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: booking-service } }
+  template:
+    metadata:
+      labels: { app: booking-service }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/path: /actuator/prometheus, prometheus.io/port: "8080" }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 100, fsGroup: 101 }
+      containers:
+        - name: booking-service
+          image: ghcr.io/OWNER/aeroflow-booking-service:latest
+          ports: [{ containerPort: 8080, name: http }]
+          envFrom: [{ configMapRef: { name: aeroflow-config } }, { secretRef: { name: aeroflow-secrets } }]
+          env:
+            - { name: PORT, value: "8080" }
+            - { name: DB_URL, value: "jdbc:postgresql://$(DB_HOST):5432/aeroflow_booking" }
+          resources: { requests: { cpu: 100m, memory: 384Mi }, limits: { memory: 640Mi } }
+          readinessProbe: { httpGet: { path: /actuator/health/readiness, port: http }, initialDelaySeconds: 20, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /actuator/health/liveness, port: http }, initialDelaySeconds: 60, periodSeconds: 20 }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: booking-service, namespace: aeroflow }
+spec: { selector: { app: booking-service }, ports: [{ port: 80, targetPort: http, name: http }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: checkin-service, namespace: aeroflow, labels: { app: checkin-service, app.kubernetes.io/part-of: aeroflow } }
+spec:
+  replicas: 2
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: checkin-service } }
+  template:
+    metadata:
+      labels: { app: checkin-service }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/path: /actuator/prometheus, prometheus.io/port: "8080" }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 100, fsGroup: 101 }
+      containers:
+        - name: checkin-service
+          image: ghcr.io/OWNER/aeroflow-checkin-service:latest
+          ports: [{ containerPort: 8080, name: http }]
+          envFrom: [{ configMapRef: { name: aeroflow-config } }, { secretRef: { name: aeroflow-secrets } }]
+          env:
+            - { name: PORT, value: "8080" }
+            - { name: DB_URL, value: "jdbc:postgresql://$(DB_HOST):5432/aeroflow_checkin" }
+          resources: { requests: { cpu: 100m, memory: 384Mi }, limits: { memory: 640Mi } }
+          readinessProbe: { httpGet: { path: /actuator/health/readiness, port: http }, initialDelaySeconds: 20, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /actuator/health/liveness, port: http }, initialDelaySeconds: 60, periodSeconds: 20 }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: checkin-service, namespace: aeroflow }
+spec: { selector: { app: checkin-service }, ports: [{ port: 80, targetPort: http, name: http }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: notification-service, namespace: aeroflow, labels: { app: notification-service, app.kubernetes.io/part-of: aeroflow } }
+spec:
+  replicas: 1
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: notification-service } }
+  template:
+    metadata:
+      labels: { app: notification-service }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/path: /actuator/prometheus, prometheus.io/port: "8080" }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 100, fsGroup: 101 }
+      containers:
+        - name: notification-service
+          image: ghcr.io/OWNER/aeroflow-notification-service:latest
+          ports: [{ containerPort: 8080, name: http }]
+          envFrom: [{ configMapRef: { name: aeroflow-config } }, { secretRef: { name: aeroflow-secrets } }]
+          env:
+            - { name: PORT, value: "8080" }
+            - { name: DB_URL, value: "jdbc:postgresql://$(DB_HOST):5432/aeroflow_notification" }
+          resources: { requests: { cpu: 100m, memory: 384Mi }, limits: { memory: 640Mi } }
+          readinessProbe: { httpGet: { path: /actuator/health/readiness, port: http }, initialDelaySeconds: 20, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /actuator/health/liveness, port: http }, initialDelaySeconds: 60, periodSeconds: 20 }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: notification-service, namespace: aeroflow }
+spec: { selector: { app: notification-service }, ports: [{ port: 80, targetPort: http, name: http }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: reporting-service, namespace: aeroflow, labels: { app: reporting-service, app.kubernetes.io/part-of: aeroflow } }
+spec:
+  replicas: 1
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  selector: { matchLabels: { app: reporting-service } }
+  template:
+    metadata:
+      labels: { app: reporting-service }
+      annotations: { prometheus.io/scrape: "true", prometheus.io/path: /actuator/prometheus, prometheus.io/port: "8080" }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 100, fsGroup: 101 }
+      containers:
+        - name: reporting-service
+          image: ghcr.io/OWNER/aeroflow-reporting-service:latest
+          ports: [{ containerPort: 8080, name: http }]
+          envFrom: [{ configMapRef: { name: aeroflow-config } }, { secretRef: { name: aeroflow-secrets } }]
+          env:
+            - { name: PORT, value: "8080" }
+            - { name: DB_URL, value: "jdbc:postgresql://$(DB_HOST):5432/aeroflow_reporting" }
+          resources: { requests: { cpu: 100m, memory: 384Mi }, limits: { memory: 640Mi } }
+          readinessProbe: { httpGet: { path: /actuator/health/readiness, port: http }, initialDelaySeconds: 20, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /actuator/health/liveness, port: http }, initialDelaySeconds: 60, periodSeconds: 20 }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          volumeMounts: [{ name: tmp, mountPath: /tmp }]
+      volumes: [{ name: tmp, emptyDir: {} }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: reporting-service, namespace: aeroflow }
+spec: { selector: { app: reporting-service }, ports: [{ port: 80, targetPort: http, name: http }] }

@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Namespace
+metadata: { name: aeroflow, labels: { app.kubernetes.io/part-of: aeroflow } }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: aeroflow-config, namespace: aeroflow }
+data:
+  KAFKA_BOOTSTRAP_SERVERS: "kafka.aeroflow.svc:9092"
+  REDIS_URL: "redis://redis.aeroflow.svc:6379"
+  SEED_DEMO_DATA: "true"
+  CORS_ALLOWED_ORIGINS: "https://aeroflow.example.com"
+  AUTH_SERVICE_URL: "http://auth-service"
+  FLIGHT_SERVICE_URL: "http://flight-service"
+  PASSENGER_SERVICE_URL: "http://passenger-service"
+  BOOKING_SERVICE_URL: "http://booking-service"
+  CHECKIN_SERVICE_URL: "http://checkin-service"
+  NOTIFICATION_SERVICE_URL: "http://notification-service"
+  REPORTING_SERVICE_URL: "http://reporting-service"
+---
+# Example only - create the real secret out-of-band (kubectl create secret / External Secrets / Sealed Secrets).
+apiVersion: v1
+kind: Secret
+metadata: { name: aeroflow-secrets, namespace: aeroflow }
+type: Opaque
+stringData:
+  JWT_SECRET: "REPLACE_ME_WITH_openssl_rand_base64_48"
+  DB_USERNAME: "aeroflow"
+  DB_PASSWORD: "REPLACE_ME"
+  DB_HOST: "postgres.aeroflow.svc"
