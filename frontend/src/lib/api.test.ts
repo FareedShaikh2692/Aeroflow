@@ -21,7 +21,7 @@ describe("api client", () => {
   it("normalises backend errors into ApiError with field errors", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse({ code: "VALIDATION_FAILED", message: "Request validation failed",
       fieldErrors: [{ field: "email", message: "must be valid" }], traceId: "t-1" }, 400));
-    const err = await api("/api/x").catch((e) => e);
+    const err = (await api("/api/x").catch((e: unknown) => e)) as ApiError;
     expect(err).toBeInstanceOf(ApiError);
     expect(err).toMatchObject({ status: 400, code: "VALIDATION_FAILED", traceId: "t-1" });
     expect(err.fieldErrors[0].field).toBe("email");
