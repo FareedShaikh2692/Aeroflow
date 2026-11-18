@@ -196,7 +196,7 @@ function PaymentStep({ total, currency, loading, onBack, onPay }: { total: numbe
     <form onSubmit={handleSubmit(onPay)} noValidate aria-label="Payment">
       <Card>
         <CardHeader title={<span className="flex items-center gap-2"><CreditCard className="size-4 text-accent-600" />Payment</span>}
-          description="Demo checkout - no real payment is taken. Use 4242 4242 4242 4242 (approved) or 4000 0000 0000 0002 (declined)." />
+          description="Payments run in test mode: your card is not charged and no ticket is issued. Test card: 4242 4242 4242 4242." />
         <CardBody className="grid gap-4 sm:grid-cols-2">
           <Field label="Name on card" htmlFor="cardHolder" error={errors.cardHolder?.message} className="sm:col-span-2"><Input id="cardHolder" autoComplete="cc-name" {...register("cardHolder")} /></Field>
           <Field label="Card number" htmlFor="cardNumber" error={errors.cardNumber?.message} className="sm:col-span-2"><Input id="cardNumber" inputMode="numeric" autoComplete="cc-number" placeholder="4242 4242 4242 4242" aria-invalid={!!errors.cardNumber} {...register("cardNumber")} /></Field>

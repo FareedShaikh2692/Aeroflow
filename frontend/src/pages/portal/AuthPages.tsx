@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/form";
 import { Card } from "@/components/ui/card";
 
+const SHOW_DEMO = import.meta.env.DEV || import.meta.env.VITE_SHOW_DEMO_ACCOUNTS === "true";
 const DEMO = [
   ["superadmin@aeroflow.dev", "Super admin"], ["admin@aeroflow.dev", "Admin"], ["ops@aeroflow.dev", "Operations"],
   ["agent@aeroflow.dev", "Flight agent"], ["checkin@aeroflow.dev", "Check-in agent"], ["passenger@aeroflow.dev", "Passenger"],
@@ -57,7 +58,7 @@ export function LoginForm({ onSuccess }: { onSuccess: (isStaff: boolean) => void
         <Input id="password" type="password" autoComplete="current-password" aria-invalid={!!errors.password} {...register("password")} />
       </Field>
       <Button type="submit" className="w-full" size="lg" loading={isSubmitting}><KeyRound />Sign in</Button>
-      <details className="rounded-lg border border-navy-100 bg-navy-50/60 p-3 text-sm">
+      {SHOW_DEMO && <details className="rounded-lg border border-navy-100 bg-navy-50/60 p-3 text-sm">
         <summary className="cursor-pointer font-semibold text-navy-700">Demo accounts (password: Aeroflow@2026)</summary>
         <div className="mt-3 grid grid-cols-2 gap-2">
           {DEMO.map(([email, label]) => (
@@ -67,7 +68,7 @@ export function LoginForm({ onSuccess }: { onSuccess: (isStaff: boolean) => void
             </button>
           ))}
         </div>
-      </details>
+      </details>}
     </form>
   );
 }

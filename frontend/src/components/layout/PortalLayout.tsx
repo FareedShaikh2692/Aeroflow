@@ -52,7 +52,7 @@ export function PortalLayout() {
       <main className="flex-1"><Outlet /></main>
       <footer className="border-t border-navy-100 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-xs text-navy-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <span>© {new Date().getFullYear()} AeroFlow — fictional airline, portfolio demonstration. Payments, e-mail and SMS are simulated.</span>
+          <span>© {new Date().getFullYear()} AeroFlow. Online payments run in test mode: no card is charged and no ticket is issued.</span>
           <span className="flex gap-4"><Link to="/login" className="hover:text-navy-900">Staff sign-in</Link><a href="#top" className="hover:text-navy-900">Back to top</a></span>
         </div>
       </footer>

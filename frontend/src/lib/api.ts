@@ -111,7 +111,7 @@ export async function api<T = unknown>(path: string, opts: RequestOptions = {}, 
 }
 
 export const BACKEND_UNAVAILABLE_MESSAGE =
-  "The AeroFlow API is not connected to this deployment yet, so live data (search, booking, sign-in) is unavailable.";
+  "AeroFlow services are temporarily unavailable, so search, booking and sign-in cannot be completed right now.";
 
 function backendUnavailable() {
   return new ApiError(503, "BACKEND_UNAVAILABLE", BACKEND_UNAVAILABLE_MESSAGE);

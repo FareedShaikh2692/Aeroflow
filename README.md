@@ -4,8 +4,9 @@ A production-style, event-driven airline platform: **8 Spring Boot microservices
 PostgreSQL, Redis and Kafka, with a **React + TypeScript** SPA providing an airline **staff operations console**
 and a **passenger booking & check-in portal**.
 
-> AeroFlow is a fictional airline built as a portfolio project. Payments, e-mail and SMS are simulated by mock adapters,
-> and revenue history on the dashboard includes clearly-labelled synthetic demo data.
+> Payments run against a mock payment gateway (no card is charged, no ticket is issued) and e-mail/SMS go through
+> mock adapters until real providers are configured. Production seeds the flight schedule only; demo users and
+> synthetic reporting history are local/dev-only.
 
 ## Highlights
 - **Booking engine**: PNR generation, interactive seat map, Idempotency-Key protected checkout, mock PSP, cancellations with refunds.
@@ -55,8 +56,11 @@ scripts/local-backend.sh status                    # all 8 ports should report 2
 pnpm --dir frontend install && pnpm --dir frontend dev   # http://localhost:5173
 ```
 
-## Demo accounts
-Password for all: **`Aeroflow@2026`** (seeded only when `SEED_DEMO_DATA=true`)
+## Accounts
+**Production:** the first SUPER_ADMIN is created from `ADMIN_EMAIL` / `ADMIN_PASSWORD`; passengers self-register.
+Demo accounts are never seeded (`SEED_DEMO_USERS=false`) and the demo-login list is hidden in production builds.
+
+**Local development** (`SEED_DEMO_DATA=true`) — password for all: **`Aeroflow@2026`**
 
 | Role | E-mail |
 |---|---|

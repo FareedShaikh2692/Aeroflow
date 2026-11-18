@@ -8,6 +8,8 @@ envVarGroups:
       - { key: KAFKA_BOOTSTRAP_SERVERS, sync: false }
       - { key: KAFKA_USERNAME, sync: false }
       - { key: KAFKA_PASSWORD, sync: false }
+      - { key: ADMIN_EMAIL, sync: false }
+      - { key: ADMIN_PASSWORD, sync: false }
 
 databases:
   - { name: aeroflow-db, databaseName: aeroflow, plan: basic-256mb }
@@ -57,7 +59,11 @@ services:
       - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
       - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
       - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
-      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: SEED_DEMO_USERS, value: "false" }
+      - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
+      - { key: SEED_FLIGHTS, value: "true" }
+      - { key: ADMIN_EMAIL, fromGroup: aeroflow-shared }
+      - { key: ADMIN_PASSWORD, fromGroup: aeroflow-shared }
       - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
       - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
       - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }
@@ -82,7 +88,11 @@ services:
       - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
       - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
       - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
-      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: SEED_DEMO_USERS, value: "false" }
+      - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
+      - { key: SEED_FLIGHTS, value: "true" }
+      - { key: ADMIN_EMAIL, fromGroup: aeroflow-shared }
+      - { key: ADMIN_PASSWORD, fromGroup: aeroflow-shared }
       - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
       - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
       - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }
@@ -107,7 +117,11 @@ services:
       - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
       - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
       - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
-      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: SEED_DEMO_USERS, value: "false" }
+      - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
+      - { key: SEED_FLIGHTS, value: "true" }
+      - { key: ADMIN_EMAIL, fromGroup: aeroflow-shared }
+      - { key: ADMIN_PASSWORD, fromGroup: aeroflow-shared }
       - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
       - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
       - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }
@@ -132,7 +146,11 @@ services:
       - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
       - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
       - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
-      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: SEED_DEMO_USERS, value: "false" }
+      - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
+      - { key: SEED_FLIGHTS, value: "true" }
+      - { key: ADMIN_EMAIL, fromGroup: aeroflow-shared }
+      - { key: ADMIN_PASSWORD, fromGroup: aeroflow-shared }
       - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
       - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
       - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }
@@ -157,7 +175,11 @@ services:
       - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
       - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
       - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
-      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: SEED_DEMO_USERS, value: "false" }
+      - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
+      - { key: SEED_FLIGHTS, value: "true" }
+      - { key: ADMIN_EMAIL, fromGroup: aeroflow-shared }
+      - { key: ADMIN_PASSWORD, fromGroup: aeroflow-shared }
       - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
       - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
       - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }
@@ -182,7 +204,11 @@ services:
       - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
       - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
       - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
-      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: SEED_DEMO_USERS, value: "false" }
+      - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
+      - { key: SEED_FLIGHTS, value: "true" }
+      - { key: ADMIN_EMAIL, fromGroup: aeroflow-shared }
+      - { key: ADMIN_PASSWORD, fromGroup: aeroflow-shared }
       - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
       - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
       - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }
@@ -207,7 +233,11 @@ services:
       - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
       - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
       - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
-      - { key: SEED_DEMO_DATA, value: "true" }
+      - { key: SEED_DEMO_USERS, value: "false" }
+      - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
+      - { key: SEED_FLIGHTS, value: "true" }
+      - { key: ADMIN_EMAIL, fromGroup: aeroflow-shared }
+      - { key: ADMIN_PASSWORD, fromGroup: aeroflow-shared }
       - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
       - { key: DB_USERNAME, fromDatabase: { name: aeroflow-db, property: user } }
       - { key: DB_PASSWORD, fromDatabase: { name: aeroflow-db, property: password } }

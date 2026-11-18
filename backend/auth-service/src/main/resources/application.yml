@@ -13,5 +13,9 @@ aeroflow:
     max-failed-logins: 5
     lockout: 15m
   seed:
-    demo-users: ${SEED_DEMO_DATA:true}
+    demo-users: ${SEED_DEMO_USERS:${SEED_DEMO_DATA:true}}
     demo-password: ${DEMO_PASSWORD:Aeroflow@2026}
+  bootstrap:
+    # Production: the first SUPER_ADMIN is created from secrets (no shared demo passwords)
+    admin-email: ${ADMIN_EMAIL:}
+    admin-password: ${ADMIN_PASSWORD:}

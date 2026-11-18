@@ -16,7 +16,7 @@ export function BackendStatusBanner() {
   return (
     <div role="status" className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900">
       <Info className="mr-1.5 inline size-4 -translate-y-px" aria-hidden />
-      {BACKEND_UNAVAILABLE_MESSAGE} Browse the interface, or run the full stack locally (see README).
+      {BACKEND_UNAVAILABLE_MESSAGE} Please try again shortly.
     </div>
   );
 }

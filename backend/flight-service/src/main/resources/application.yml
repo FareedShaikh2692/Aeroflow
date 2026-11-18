@@ -18,4 +18,4 @@ aeroflow:
   services:
     booking-url: ${BOOKING_SERVICE_URL:http://localhost:8084}
   seed:
-    flights: ${SEED_DEMO_DATA:true}
+    flights: ${SEED_FLIGHTS:${SEED_DEMO_DATA:true}}

@@ -10,4 +10,4 @@ aeroflow:
   security:
     public-paths:
   seed:
-    synthetic-history: ${SEED_DEMO_DATA:true}
+    synthetic-history: ${SEED_SYNTHETIC_HISTORY:${SEED_DEMO_DATA:true}}

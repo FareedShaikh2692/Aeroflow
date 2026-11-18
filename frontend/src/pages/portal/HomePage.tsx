@@ -71,7 +71,7 @@ export function HomePage() {
         {[
           { icon: CalendarCheck2, title: "Choose your seat", text: "Pick the exact seat you want on an interactive cabin map." },
           { icon: Smartphone, title: "Online check-in", text: "Check in 48 hours before departure and download your boarding pass." },
-          { icon: ShieldCheck, title: "Book with confidence", text: "Secure, idempotent booking - you will never be charged twice." },
+          { icon: ShieldCheck, title: "Book with confidence", text: "Secure checkout that can never charge you twice for the same booking." },
         ].map((f) => (
           <div key={f.title} className="rounded-2xl border border-navy-100 bg-white p-6 shadow-card">
             <f.icon className="size-6 text-accent-600" />
