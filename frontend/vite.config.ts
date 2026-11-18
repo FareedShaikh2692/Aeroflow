@@ -34,6 +34,13 @@ export default defineConfig({
       reporter: ["text-summary", "lcov", "json-summary"],
       include: ["src/lib/**", "src/components/**", "src/pages/**"],
       exclude: ["src/**/*.test.*", "src/test/**"],
+      // Quality gate on critical client logic (pages are covered by Playwright E2E).
+      thresholds: {
+        "src/lib/api.ts": { lines: 95, branches: 80 },
+        "src/lib/schemas.ts": { lines: 95, branches: 90 },
+        "src/lib/auth.tsx": { lines: 85, branches: 80 },
+        "src/components/SeatMap.tsx": { lines: 95, branches: 90 },
+      },
     },
   },
 });

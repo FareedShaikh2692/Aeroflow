@@ -6,6 +6,7 @@
   <artifactId>checkin-service</artifactId>
   <name>AeroFlow checkin-service</name>
   <description>Online check-in and boarding passes</description>
+  <properties><coverage.minimum>0.65</coverage.minimum></properties>
   <dependencies>
     <dependency><groupId>com.aeroflow</groupId><artifactId>common</artifactId></dependency>
     <dependency><groupId>com.github.librepdf</groupId><artifactId>openpdf</artifactId><version>2.0.3</version></dependency>

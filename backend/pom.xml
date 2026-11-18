@@ -35,6 +35,8 @@
     <logstash.version>8.0</logstash.version>
     <testcontainers.version>1.20.3</testcontainers.version>
     <jacoco.version>0.8.12</jacoco.version>
+    <!-- per-module line-coverage floor enforced in `mvn verify`; raised as tests are added -->
+    <coverage.minimum>0.00</coverage.minimum>
   </properties>
 
   <dependencyManagement>
@@ -81,11 +83,24 @@
     </pluginManagement>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions><execution><goals><goal>integration-test</goal><goal>verify</goal></goals></execution></executions>
+      </plugin>
+      <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <executions>
           <execution><id>prepare-agent</id><goals><goal>prepare-agent</goal></goals></execution>
           <execution><id>report</id><phase>verify</phase><goals><goal>report</goal></goals></execution>
+          <execution>
+            <id>coverage-gate</id><phase>verify</phase><goals><goal>check</goal></goals>
+            <configuration>
+              <rules><rule><element>BUNDLE</element>
+                <limits><limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>${coverage.minimum}</minimum></limit></limits>
+              </rule></rules>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>

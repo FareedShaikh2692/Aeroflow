@@ -6,6 +6,7 @@
   <artifactId>auth-service</artifactId>
   <name>AeroFlow auth-service</name>
   <description>Authentication, users, roles and refresh tokens</description>
+  <properties><coverage.minimum>0.45</coverage.minimum></properties>
   <dependencies>
     <dependency><groupId>com.aeroflow</groupId><artifactId>common</artifactId></dependency>
 
