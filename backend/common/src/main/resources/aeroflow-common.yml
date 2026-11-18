@@ -85,6 +85,12 @@ aeroflow:
       issuer: aeroflow-auth
       access-token-ttl: ${JWT_ACCESS_TTL:15m}
   events:
+    # kafka (default) | postgres (Kafka-free: shared append-only log in PostgreSQL, schema "eventbus")
+    transport: ${EVENTS_TRANSPORT:kafka}
+    bus:
+      # Database holding the shared event log. Empty = the service's own database (single shared database
+      # deployments). Required when every service has its own database, e.g. jdbc:postgresql://host:5432/aeroflow_events
+      url: ${EVENTS_DB_URL:}
     relay-enabled: ${EVENTS_RELAY_ENABLED:true}
     topic-replicas: ${KAFKA_TOPIC_REPLICAS:1}
 

@@ -10,14 +10,11 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
-import org.springframework.kafka.core.KafkaTemplate;
 
 class OutboxRelayTest {
     final OutboxRepository repo = mock(OutboxRepository.class);
-    @SuppressWarnings("unchecked")
-    final KafkaTemplate<String, String> kafka = mock(KafkaTemplate.class);
+    final EventTransport kafka = mock(EventTransport.class);
     final OutboxRelay relay = new OutboxRelay(repo, kafka, new SimpleMeterRegistry());
 
     OutboxEvent event(String key) {
@@ -25,10 +22,9 @@ class OutboxRelayTest {
     }
 
     @Test
-    void publishesInOrderAndMarksEventsPublished() {
+    void publishesInOrderAndMarksEventsPublished() throws Exception {
         OutboxEvent a = event("a"), b = event("b");
         when(repo.lockBatch(100)).thenReturn(List.of(a, b));
-        when(kafka.send(anyString(), anyString(), anyString())).thenReturn(CompletableFuture.completedFuture(null));
         relay.relay();
         assertThat(a.getPublishedAt()).isNotNull();
         assertThat(b.getPublishedAt()).isNotNull();
@@ -38,10 +34,10 @@ class OutboxRelayTest {
     }
 
     @Test
-    void stopsBatchOnFailureToPreserveOrderingAndRecordsAttempt() {
+    void stopsBatchOnFailureToPreserveOrderingAndRecordsAttempt() throws Exception {
         OutboxEvent a = event("a"), b = event("b");
         when(repo.lockBatch(100)).thenReturn(List.of(a, b));
-        when(kafka.send(anyString(), eq("a"), anyString())).thenReturn(CompletableFuture.failedFuture(new RuntimeException("broker down")));
+        doThrow(new RuntimeException("broker down")).when(kafka).send(anyString(), eq("a"), anyString());
         relay.relay();
         assertThat(a.getPublishedAt()).isNull();
         assertThat(a.getAttempts()).isEqualTo(1);

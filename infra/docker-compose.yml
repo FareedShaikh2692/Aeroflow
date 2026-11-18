@@ -7,6 +7,8 @@ x-service: &service
     DB_USERNAME: aeroflow
     DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
     REDIS_URL: redis://redis:6379
+    EVENTS_TRANSPORT: ${EVENTS_TRANSPORT:-postgres}
+    EVENTS_DB_URL: jdbc:postgresql://postgres:5432/aeroflow_events
     KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
     DEMO_PASSWORD: ${DEMO_PASSWORD:-Aeroflow@2026}
@@ -16,7 +18,6 @@ x-service: &service
   depends_on:
     postgres: { condition: service_healthy }
     redis: { condition: service_healthy }
-    kafka: { condition: service_healthy }
   deploy: { resources: { limits: { memory: 512m } } }
 
 services:
@@ -39,7 +40,8 @@ services:
     ports: ["6379:6379"]
     healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 5s, retries: 20 }
 
-  kafka:
+  kafka:   # optional: docker compose --profile kafka up  (and EVENTS_TRANSPORT=kafka)
+    profiles: [kafka]
     image: apache/kafka:3.8.1
     environment:
       KAFKA_NODE_ID: 1

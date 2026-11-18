@@ -178,8 +178,8 @@ check("checked-in booking cannot be self-cancelled", s == 409)
 print("[events, notifications, reporting, audit]")
 notes = wait_for(lambda: [n for n in call("GET", "/api/notifications/me", token=pax["accessToken"])[1] or []
                           if n.get("pnr") == pnr and n["eventType"] == "checkin.completed"],
-                 "notifications delivered via Kafka")
-check("booking + check-in notifications delivered via Kafka", len(notes) >= 1)
+                 "notifications delivered via the event bus")
+check("booking + check-in notifications delivered via the event bus", len(notes) >= 1)
 s, b, _ = call("PATCH", f"/api/flights/{flight['id']}/status", {"status": "DELAYED", "delayMinutes": 40,
                "reason": "Smoke test: ATC slot"}, token=ops["accessToken"])
 check("ops delays flight", s == 200 and b["status"] == "DELAYED", f"{s} {b}")

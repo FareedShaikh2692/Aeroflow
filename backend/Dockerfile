@@ -2,6 +2,7 @@
 # One image recipe for every service:  docker build --build-arg SERVICE=booking-service -t aeroflow/booking-service backend
 FROM maven:3.9.9-eclipse-temurin-21 AS build
 ARG SERVICE
+RUN test -n "$SERVICE" || (echo "Build arg SERVICE is required, e.g. --build-arg SERVICE=booking-service" && exit 1)
 WORKDIR /src
 COPY pom.xml .
 COPY common/pom.xml common/

@@ -1,26 +1,24 @@
 package com.aeroflow.common.events;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Polls the outbox and publishes pending events to Kafka (at-least-once delivery). */
+/** Polls the outbox and publishes pending events through the configured transport (at-least-once delivery). */
 @Component
 @ConditionalOnProperty(name = "aeroflow.events.relay-enabled", havingValue = "true", matchIfMissing = true)
 public class OutboxRelay {
     private static final Logger log = LoggerFactory.getLogger(OutboxRelay.class);
     private final OutboxRepository outbox;
-    private final KafkaTemplate<String, String> kafka;
+    private final EventTransport transport;
 
-    public OutboxRelay(OutboxRepository outbox, KafkaTemplate<String, String> kafka, MeterRegistry meters) {
+    public OutboxRelay(OutboxRepository outbox, EventTransport transport, MeterRegistry meters) {
         this.outbox = outbox;
-        this.kafka = kafka;
+        this.transport = transport;
         meters.gauge("aeroflow.outbox.pending", outbox, OutboxRepository::countByPublishedAtIsNull);
     }
 
@@ -29,7 +27,7 @@ public class OutboxRelay {
     public void relay() {
         for (OutboxEvent e : outbox.lockBatch(100)) {
             try {
-                kafka.send(e.getTopic(), e.getAggregateId(), e.getPayload()).get(5, TimeUnit.SECONDS);
+                transport.send(e.getTopic(), e.getAggregateId(), e.getPayload());
                 e.markPublished();
             } catch (Exception ex) {
                 if (ex instanceof InterruptedException) Thread.currentThread().interrupt();

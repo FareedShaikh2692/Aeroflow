@@ -1,13 +1,10 @@
 # Render Blueprint (https://render.com/docs/blueprint-spec). Deploy: Render dashboard -> New -> Blueprint -> this repo.
-# Kafka is not offered by Render: point KAFKA_* at a managed broker (Confluent Cloud, Aiven, Redpanda Cloud).
+# Kafka-free: events flow through the PostgreSQL event bus (schema "eventbus") in the shared database.
 # One Postgres instance, one schema per service (DB_SCHEMA + currentSchema) - services still never share tables.
 envVarGroups:
   - name: aeroflow-shared
     envVars:
       - { key: JWT_SECRET, generateValue: true }
-      - { key: KAFKA_BOOTSTRAP_SERVERS, sync: false }
-      - { key: KAFKA_USERNAME, sync: false }
-      - { key: KAFKA_PASSWORD, sync: false }
       - { key: ADMIN_EMAIL, sync: false }
       - { key: ADMIN_PASSWORD, sync: false }
 
@@ -25,7 +22,7 @@ services:
     name: aeroflow-gateway
     runtime: docker
     plan: starter
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./backend/docker/gateway.Dockerfile
     dockerContext: ./backend
     healthCheckPath: /actuator/health/readiness
     envVars:
@@ -46,7 +43,7 @@ services:
     name: aeroflow-auth-service
     runtime: docker
     plan: starter
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./backend/docker/auth-service.Dockerfile
     dockerContext: ./backend
     envVars:
       - { key: SERVICE, value: auth-service }
@@ -54,11 +51,8 @@ services:
       - { key: DB_SCHEMA, value: auth }
       - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=auth" }
       - { key: JWT_SECRET, fromGroup: aeroflow-shared }
-      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
-      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
-      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
-      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
-      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs" }
+      - { key: EVENTS_TRANSPORT, value: postgres }
       - { key: SEED_DEMO_USERS, value: "false" }
       - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
       - { key: SEED_FLIGHTS, value: "true" }
@@ -75,7 +69,7 @@ services:
     name: aeroflow-flight-service
     runtime: docker
     plan: starter
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./backend/docker/flight-service.Dockerfile
     dockerContext: ./backend
     envVars:
       - { key: SERVICE, value: flight-service }
@@ -83,11 +77,8 @@ services:
       - { key: DB_SCHEMA, value: flight }
       - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=flight" }
       - { key: JWT_SECRET, fromGroup: aeroflow-shared }
-      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
-      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
-      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
-      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
-      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs" }
+      - { key: EVENTS_TRANSPORT, value: postgres }
       - { key: SEED_DEMO_USERS, value: "false" }
       - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
       - { key: SEED_FLIGHTS, value: "true" }
@@ -104,7 +95,7 @@ services:
     name: aeroflow-passenger-service
     runtime: docker
     plan: starter
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./backend/docker/passenger-service.Dockerfile
     dockerContext: ./backend
     envVars:
       - { key: SERVICE, value: passenger-service }
@@ -112,11 +103,8 @@ services:
       - { key: DB_SCHEMA, value: passenger }
       - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=passenger" }
       - { key: JWT_SECRET, fromGroup: aeroflow-shared }
-      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
-      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
-      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
-      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
-      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs" }
+      - { key: EVENTS_TRANSPORT, value: postgres }
       - { key: SEED_DEMO_USERS, value: "false" }
       - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
       - { key: SEED_FLIGHTS, value: "true" }
@@ -133,7 +121,7 @@ services:
     name: aeroflow-booking-service
     runtime: docker
     plan: starter
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./backend/docker/booking-service.Dockerfile
     dockerContext: ./backend
     envVars:
       - { key: SERVICE, value: booking-service }
@@ -141,11 +129,8 @@ services:
       - { key: DB_SCHEMA, value: booking }
       - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=booking" }
       - { key: JWT_SECRET, fromGroup: aeroflow-shared }
-      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
-      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
-      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
-      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
-      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs" }
+      - { key: EVENTS_TRANSPORT, value: postgres }
       - { key: SEED_DEMO_USERS, value: "false" }
       - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
       - { key: SEED_FLIGHTS, value: "true" }
@@ -162,7 +147,7 @@ services:
     name: aeroflow-checkin-service
     runtime: docker
     plan: starter
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./backend/docker/checkin-service.Dockerfile
     dockerContext: ./backend
     envVars:
       - { key: SERVICE, value: checkin-service }
@@ -170,11 +155,8 @@ services:
       - { key: DB_SCHEMA, value: checkin }
       - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=checkin" }
       - { key: JWT_SECRET, fromGroup: aeroflow-shared }
-      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
-      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
-      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
-      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
-      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs" }
+      - { key: EVENTS_TRANSPORT, value: postgres }
       - { key: SEED_DEMO_USERS, value: "false" }
       - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
       - { key: SEED_FLIGHTS, value: "true" }
@@ -191,7 +173,7 @@ services:
     name: aeroflow-notification-service
     runtime: docker
     plan: starter
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./backend/docker/notification-service.Dockerfile
     dockerContext: ./backend
     envVars:
       - { key: SERVICE, value: notification-service }
@@ -199,11 +181,8 @@ services:
       - { key: DB_SCHEMA, value: notification }
       - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=notification" }
       - { key: JWT_SECRET, fromGroup: aeroflow-shared }
-      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
-      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
-      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
-      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
-      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs" }
+      - { key: EVENTS_TRANSPORT, value: postgres }
       - { key: SEED_DEMO_USERS, value: "false" }
       - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
       - { key: SEED_FLIGHTS, value: "true" }
@@ -220,7 +199,7 @@ services:
     name: aeroflow-reporting-service
     runtime: docker
     plan: starter
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./backend/docker/reporting-service.Dockerfile
     dockerContext: ./backend
     envVars:
       - { key: SERVICE, value: reporting-service }
@@ -228,11 +207,8 @@ services:
       - { key: DB_SCHEMA, value: reporting }
       - { key: DB_URL, value: "jdbc:postgresql://${DB_HOST}:5432/aeroflow?currentSchema=reporting" }
       - { key: JWT_SECRET, fromGroup: aeroflow-shared }
-      - { key: KAFKA_BOOTSTRAP_SERVERS, fromGroup: aeroflow-shared }
-      - { key: KAFKA_USERNAME, fromGroup: aeroflow-shared }
-      - { key: KAFKA_PASSWORD, fromGroup: aeroflow-shared }
-      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs,cloud-kafka" }
-      - { key: KAFKA_TOPIC_REPLICAS, value: "3" }
+      - { key: SPRING_PROFILES_ACTIVE, value: "json-logs" }
+      - { key: EVENTS_TRANSPORT, value: postgres }
       - { key: SEED_DEMO_USERS, value: "false" }
       - { key: SEED_SYNTHETIC_HISTORY, value: "false" }
       - { key: SEED_FLIGHTS, value: "true" }

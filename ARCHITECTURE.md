@@ -71,6 +71,10 @@ sequenceDiagram
   breaker (Resilience4j); failures surface as `503 UPSTREAM_UNAVAILABLE`.
 * **Asynchronous (Kafka)** for everything else. Events use a common envelope
   `{eventId, type, source, aggregateId, occurredAt, payload}` keyed by aggregate id (per-aggregate ordering).
+* **Pluggable transport** (`EVENTS_TRANSPORT`): `kafka` (default) or `postgres` — a Kafka-free event bus where all
+  services append to a shared log table (`eventbus.events`) and each consumer group tracks per-topic offsets
+  (`eventbus.consumer_offsets`), with a session advisory lock per (group, topic) for single-consumer ordering,
+  bounded retries and a `eventbus.dead_letters` table. Same outbox, same idempotent consumers, no broker to run.
 * **Transactional outbox** guarantees no event is lost or published for a rolled-back transaction.
 * **Idempotent consumers**: each service records processed event ids; redeliveries are no-ops.
   Poison messages are retried with backoff then parked on `<topic>.DLT`.
