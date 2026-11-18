@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: notification-service
+  config:
+    import: classpath:aeroflow-common.yml
+server:
+  port: ${PORT:8086}
+aeroflow:
+  db-name: aeroflow_notification
+  security:
+    public-paths:
+  notifications:
+    email-from: ${NOTIFY_EMAIL_FROM:no-reply@aeroflow.dev}

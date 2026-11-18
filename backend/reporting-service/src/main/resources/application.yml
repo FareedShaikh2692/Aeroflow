@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: reporting-service
+  config:
+    import: classpath:aeroflow-common.yml
+server:
+  port: ${PORT:8087}
+aeroflow:
+  db-name: aeroflow_reporting
+  security:
+    public-paths:
+  seed:
+    synthetic-history: ${SEED_DEMO_DATA:true}

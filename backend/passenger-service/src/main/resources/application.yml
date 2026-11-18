@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: passenger-service
+  config:
+    import: classpath:aeroflow-common.yml
+server:
+  port: ${PORT:8083}
+aeroflow:
+  db-name: aeroflow_passenger
+  security:
+    public-paths:

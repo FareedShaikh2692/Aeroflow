@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: checkin-service
+  config:
+    import: classpath:aeroflow-common.yml
+server:
+  port: ${PORT:8085}
+aeroflow:
+  db-name: aeroflow_checkin
+  security:
+    public-paths: /api/checkin/retrieve,/api/checkin/seat,/api/checkin/complete,/api/checkin/boarding-pass
+  services:
+    booking-url: ${BOOKING_SERVICE_URL:http://localhost:8084}
+  checkin:
+    opens-hours-before: ${CHECKIN_OPENS_HOURS:48}
+    closes-minutes-before: ${CHECKIN_CLOSES_MINUTES:60}

@@ -1,0 +1,97 @@
+# Shared defaults imported by every servlet-based AeroFlow service via spring.config.import.
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/${aeroflow.db-name}}
+    username: ${DB_USERNAME:aeroflow}
+    password: ${DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      connection-timeout: 5000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        format_sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        delivery.timeout.ms: 10000
+        request.timeout.ms: 5000
+    consumer:
+      group-id: ${spring.application.name}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    admin:
+      fail-fast: false
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  shutdown: graceful
+  error:
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    kafka:
+      enabled: false
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+aeroflow:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:}
+      issuer: aeroflow-auth
+      access-token-ttl: ${JWT_ACCESS_TTL:15m}
+  events:
+    relay-enabled: ${EVENTS_RELAY_ENABLED:true}
+    topic-replicas: ${KAFKA_TOPIC_REPLICAS:1}
+
+---
+# Managed Kafka (Confluent Cloud / Aiven / Redpanda Cloud) over SASL_SSL
+spring:
+  config:
+    activate:
+      on-profile: cloud-kafka
+  kafka:
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="${KAFKA_USERNAME}" password="${KAFKA_PASSWORD}";

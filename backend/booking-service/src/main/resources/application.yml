@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: booking-service
+  config:
+    import: classpath:aeroflow-common.yml
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+      timeout: 1s
+  cache:
+    type: redis
+server:
+  port: ${PORT:8084}
+aeroflow:
+  db-name: aeroflow_booking
+  security:
+    public-paths: /api/seat-maps/**,/api/bookings/retrieve,/api/bookings/guest/**,/api/bookings/quote
+  services:
+    flight-url: ${FLIGHT_SERVICE_URL:http://localhost:8082}
+  booking:
+    min-minutes-before-departure: 45
+    reminder-window-hours: 24

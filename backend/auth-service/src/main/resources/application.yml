@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: auth-service
+  config:
+    import: classpath:aeroflow-common.yml
+server:
+  port: ${PORT:8081}
+aeroflow:
+  db-name: aeroflow_auth
+  security:
+    public-paths: /api/auth/login,/api/auth/refresh,/api/auth/register,/api/auth/logout
+    refresh-token-ttl: ${JWT_REFRESH_TTL:7d}
+    max-failed-logins: 5
+    lockout: 15m
+  seed:
+    demo-users: ${SEED_DEMO_DATA:true}
+    demo-password: ${DEMO_PASSWORD:Aeroflow@2026}
