@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* AeroFlow design tokens - navy, white and restrained blue accents */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-navy-50: #f2f6fb;
+  --color-navy-100: #e3ebf5;
+  --color-navy-200: #c6d5ea;
+  --color-navy-300: #9bb4d6;
+  --color-navy-400: #6a8cbd;
+  --color-navy-500: #466ba3;
+  --color-navy-600: #345388;
+  --color-navy-700: #26406c;
+  --color-navy-800: #172c4f;
+  --color-navy-900: #0b1f3a;
+  --color-navy-950: #06122a;
+
+  --color-accent-50: #eff6ff;
+  --color-accent-100: #dbeafe;
+  --color-accent-400: #60a5fa;
+  --color-accent-500: #3b82f6;
+  --color-accent-600: #2563eb;
+  --color-accent-700: #1d4ed8;
+
+  --color-gold-400: #d6b25e;
+  --color-gold-500: #c19a3f;
+
+  --radius-xl: 0.875rem;
+  --shadow-card: 0 1px 2px rgb(11 31 58 / 0.04), 0 4px 16px -4px rgb(11 31 58 / 0.08);
+  --shadow-lift: 0 12px 40px -12px rgb(11 31 58 / 0.25);
+
+  --animate-shimmer: shimmer 1.6s infinite linear;
+  @keyframes shimmer {
+    0% { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+}
+
+@layer base {
+  html { -webkit-font-smoothing: antialiased; }
+  body { @apply bg-navy-50 text-navy-900 font-sans; }
+  h1, h2, h3 { @apply font-display tracking-tight; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-accent-500; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--color-navy-100) 0px, var(--color-navy-50) 80px, var(--color-navy-100) 160px);
+  background-size: 800px 100%;
+  animation: var(--animate-shimmer);
+}
+
+.hero-sky {
+  background:
+    radial-gradient(1200px 500px at 85% -10%, rgb(59 130 246 / 0.35), transparent 60%),
+    radial-gradient(900px 400px at 0% 120%, rgb(214 178 94 / 0.18), transparent 60%),
+    linear-gradient(160deg, #06122a 0%, #0b1f3a 45%, #172c4f 100%);
+}
