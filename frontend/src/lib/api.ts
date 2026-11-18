@@ -91,8 +91,12 @@ export async function api<T = unknown>(path: string, opts: RequestOptions = {}, 
     const refreshed = await refreshSession();
     if (refreshed) return api<T>(path, opts, true);
   }
-  // An HTML page (SPA fallback / static host 404) instead of JSON means no API is behind this URL.
-  if (!raw && (res.headers.get("content-type") ?? "").includes("text/html")) throw backendUnavailable();
+  // AeroFlow APIs always answer in JSON. An HTML page (SPA fallback) or a non-JSON 404
+  // (static host "NOT_FOUND") means no API is behind this URL.
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!raw && !contentType.includes("json") && (contentType.includes("text/html") || res.status === 404)) {
+    throw backendUnavailable();
+  }
   if (!res.ok) {
     let payload: { code?: string; message?: string; fieldErrors?: FieldError[]; traceId?: string } = {};
     try { payload = await res.json(); } catch { /* non-JSON error */ }
