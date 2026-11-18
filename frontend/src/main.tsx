@@ -13,7 +13,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 30_000,
       refetchOnWindowFocus: false,
-      retry: (count, e) => !(e instanceof ApiError && e.status >= 400 && e.status < 500) && count < 2,
+      retry: (count, e) => !(e instanceof ApiError && ((e.status >= 400 && e.status < 500) || e.code === "BACKEND_UNAVAILABLE")) && count < 2,
     },
   },
 });
