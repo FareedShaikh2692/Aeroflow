@@ -31,7 +31,9 @@ public class CommonConfig {
     @Bean
     KafkaAdmin.NewTopics aeroflowTopics(@Value("${aeroflow.events.topic-partitions:3}") int partitions,
                                         @Value("${aeroflow.events.topic-replicas:1}") int replicas) {
+        // main topics + their dead-letter topics (managed brokers usually disable auto-creation)
         return new KafkaAdmin.NewTopics(Topics.ALL.stream()
+                .flatMap(t -> java.util.stream.Stream.of(t, t + ".DLT"))
                 .map(t -> TopicBuilder.name(t).partitions(partitions).replicas(replicas).build())
                 .toArray(NewTopic[]::new));
     }

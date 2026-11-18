@@ -29,8 +29,8 @@ services:
     envVars:
       - { key: SERVICE, value: gateway }
       - { key: PORT, value: "10000" }
-      - { key: CORS_ALLOWED_ORIGINS, sync: false }
-      - { key: CORS_ALLOWED_ORIGIN_PATTERNS, value: "https://*.vercel.app" }
+      - { key: CORS_ALLOWED_ORIGINS, value: "https://aeroflow-chi.vercel.app" }
+      - { key: CORS_ALLOWED_ORIGIN_PATTERNS, value: "https://aeroflow-*-fareedshaikh2692-2964s-projects.vercel.app" }
       - { key: REDIS_URL, fromService: { type: keyvalue, name: aeroflow-redis, property: connectionString } }
       - { key: AUTH_SERVICE_URL, value: "http://aeroflow-auth-service:10000" }
       - { key: FLIGHT_SERVICE_URL, value: "http://aeroflow-flight-service:10000" }
