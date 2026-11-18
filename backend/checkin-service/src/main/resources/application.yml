@@ -3,6 +3,8 @@ spring:
     name: checkin-service
   config:
     import: classpath:aeroflow-common.yml
+  flyway:
+    locations: classpath:db/migration/checkin-service
 server:
   port: ${PORT:8085}
 aeroflow:

@@ -13,10 +13,11 @@ COPY booking-service/pom.xml booking-service/
 COPY checkin-service/pom.xml checkin-service/
 COPY notification-service/pom.xml notification-service/
 COPY reporting-service/pom.xml reporting-service/
+COPY all-in-one/pom.xml all-in-one/
 RUN --mount=type=cache,target=/root/.m2 mvn -q -B -pl ${SERVICE} -am dependency:go-offline -DskipTests || true
 COPY . .
 RUN --mount=type=cache,target=/root/.m2 mvn -q -B -pl ${SERVICE} -am package -DskipTests \
- && java -Djarmode=layertools -jar ${SERVICE}/target/app.jar extract --destination /layers
+ && java -Djarmode=layertools -jar ${SERVICE}/target/app-exec.jar extract --destination /layers
 
 FROM eclipse-temurin:21-jre-alpine
 RUN addgroup -S aeroflow && adduser -S aeroflow -G aeroflow && apk add --no-cache wget

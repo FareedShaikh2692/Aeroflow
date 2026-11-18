@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,29 +46,34 @@ public class DemoFlightSeeder implements ApplicationRunner {
     /** destination, block minutes, outbound UTC hour, economy fare AED */
     record Route(String dest, int minutes, int depHourUtc, int fare) {}
 
-    @Override
-    @Transactional
-    public void run(ApplicationArguments args) {
-        if (flights.count() > 0) return;
-        if (airports.count() == 0) seedAirports();
-        List<Aircraft> fleet = aircraft.count() == 0 ? seedFleet() : aircraft.findAll();
-        Map<String, Airport> ap = new HashMap<>();
-        airports.findAll().forEach(a -> ap.put(a.getCode(), a));
-
-        List<Route> routes = List.of(
+    static final List<Route> ROUTES = List.of(
                 new Route("LHR", 470, 2, 2850), new Route("JFK", 840, 4, 4200), new Route("CDG", 430, 3, 2650),
                 new Route("SIN", 445, 22, 2300), new Route("SYD", 840, 21, 4600), new Route("BOM", 190, 5, 950),
                 new Route("FRA", 400, 7, 2500), new Route("HKG", 480, 20, 2700), new Route("NRT", 590, 19, 3600),
                 new Route("JNB", 500, 8, 2900), new Route("IST", 290, 9, 1650), new Route("LAX", 960, 6, 4900),
                 new Route("DEL", 205, 10, 980), new Route("CAI", 230, 11, 1200));
+
+    @Override
+    @Transactional
+    public void run(ApplicationArguments args) {
+        if (flights.count() > 0) {
+            extendSchedule();
+            return;
+        }
+        if (airports.count() == 0) seedAirports();
+        List<Aircraft> fleet = aircraft.count() == 0 ? seedFleet() : aircraft.findAll();
+        Map<String, Airport> ap = new HashMap<>();
+        airports.findAll().forEach(a -> ap.put(a.getCode(), a));
+
+
         Random rnd = new Random(42);
         LocalDate today = LocalDate.now(clock);
         Instant now = Instant.now(clock);
         int created = 0;
         for (int day = -7; day <= 30; day++) {
             LocalDate date = today.plusDays(day);
-            for (int i = 0; i < routes.size(); i++) {
-                Route r = routes.get(i);
+            for (int i = 0; i < ROUTES.size(); i++) {
+                Route r = ROUTES.get(i);
                 Aircraft ac = fleet.get(i % fleet.size());
                 int number = 100 + i * 2;
                 Instant out = date.atTime(r.depHourUtc(), (i * 5) % 60).toInstant(ZoneOffset.UTC);
@@ -76,7 +82,41 @@ public class DemoFlightSeeder implements ApplicationRunner {
                 created += save("AF" + (number + 1), ap.get(r.dest()), ap.get("DXB"), ac, back, r, rnd, now);
             }
         }
-        log.info("Seeded {} demo flights across {} routes", created, routes.size() * 2);
+        log.info("Seeded {} demo flights across {} routes", created, ROUTES.size() * 2);
+    }
+
+    /**
+     * Keeps a rolling 30-day schedule: adds any missing daily departures up to the horizon. Runs at startup and
+     * nightly, so a long-running (or long-sleeping) deployment always has bookable flights.
+     */
+    @Scheduled(cron = "0 10 0 * * *", zone = "UTC")
+    @Transactional
+    public void extendSchedule() {
+        List<Aircraft> fleet = aircraft.findAll();
+        if (fleet.isEmpty() || airports.count() == 0) return;
+        Map<String, Airport> ap = new HashMap<>();
+        airports.findAll().forEach(a -> ap.put(a.getCode(), a));
+        Random rnd = new Random();
+        Instant now = Instant.now(clock);
+        LocalDate today = LocalDate.now(clock);
+        int created = 0;
+        for (int day = 0; day <= 30; day++) {
+            LocalDate date = today.plusDays(day);
+            for (int i = 0; i < ROUTES.size(); i++) {
+                Route r = ROUTES.get(i);
+                Aircraft ac = fleet.get(i % fleet.size());
+                int number = 100 + i * 2;
+                Instant out = date.atTime(r.depHourUtc(), (i * 5) % 60).toInstant(ZoneOffset.UTC);
+                Instant back = out.plus(Duration.ofMinutes(r.minutes() + 150));
+                if (out.isAfter(now) && !flights.existsByFlightNumberAndDepartureTime("AF" + number, out)) {
+                    created += save("AF" + number, ap.get("DXB"), ap.get(r.dest()), ac, out, r, rnd, now);
+                }
+                if (back.isAfter(now) && !flights.existsByFlightNumberAndDepartureTime("AF" + (number + 1), back)) {
+                    created += save("AF" + (number + 1), ap.get(r.dest()), ap.get("DXB"), ac, back, r, rnd, now);
+                }
+            }
+        }
+        if (created > 0) log.info("Schedule extended: {} new flights up to {}", created, today.plusDays(30));
     }
 
     private int save(String number, Airport from, Airport to, Aircraft ac, Instant dep, Route r, Random rnd, Instant now) {

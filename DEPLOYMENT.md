@@ -17,6 +17,24 @@ flowchart LR
 The frontend is a static Vite build on Vercel. The backend is a set of long-running JVM services and **must not** run as
 Vercel functions; it targets Render (Docker) — any container platform works (Railway, Fly.io, ECS, Kubernetes via `infra/k8s`).
 
+## Free tier: single deployable (Render free + Neon free) — `render.yaml`
+
+`backend/all-in-one` runs all seven domain services in one JVM / one Spring context (same code, same schemas,
+same event bus and internal REST calls over localhost). No Kafka (PostgreSQL event bus), no Redis (in-memory cache),
+no gateway (CORS handled by the app). Verified locally on a fresh database: starts in ~7 s, ~320 MB RSS,
+smoke test 44/44, Playwright 4/4, 0 dead letters.
+
+1. **Neon** (https://neon.tech, free): create a project → *Connection details* → choose **Java/JDBC** and turn the
+   **connection pooler OFF** (direct host, no `-pooler`). Note the JDBC URL, user and password.
+2. **Render** (https://dashboard.render.com, free): *New → Blueprint* → repo `FareedShaikh2692/Aeroflow` → fill
+   `DB_URL` (`jdbc:postgresql://ep-…neon.tech/neondb?sslmode=require`), `DB_USERNAME`, `DB_PASSWORD`,
+   `ADMIN_EMAIL`, `ADMIN_PASSWORD` → *Apply*. First build ≈ 10 min.
+3. Send the service URL (`https://aeroflow-api-xxxx.onrender.com`); set it as `VITE_API_BASE_URL` in Vercel and redeploy.
+
+Free-tier trade-offs: the instance sleeps after ~15 min idle (first request then takes ~1 min), no gateway rate
+limiting (account lockout still applies), single instance (no horizontal scaling). The 8-service blueprint for paid
+hosting is `infra/render/render.microservices.yaml`.
+
 ## 0. Kafka-free mode (free / low-cost hosting)
 
 Set `EVENTS_TRANSPORT=postgres` and no broker is needed: events go through the PostgreSQL event bus.

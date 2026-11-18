@@ -3,6 +3,8 @@ spring:
     name: notification-service
   config:
     import: classpath:aeroflow-common.yml
+  flyway:
+    locations: classpath:db/migration/notification-service
 server:
   port: ${PORT:8086}
 aeroflow:

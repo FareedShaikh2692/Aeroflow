@@ -115,6 +115,7 @@ public class PostgresEventBus implements EventTransport, DisposableBean {
 
     /** Consumes one batch for (group, topic). Returns the number of events handled. */
     int consume(EventSubscriber subscriber, String topic) throws SQLException {
+        String group = consumerGroup(subscriber);
         long lockKey = ((long) group.hashCode() << 32) | (topic.hashCode() & 0xffffffffL);
         try (Connection c = bus.getConnection()) {
             c.setAutoCommit(true);
@@ -143,8 +144,8 @@ public class PostgresEventBus implements EventTransport, DisposableBean {
                         while (rs.next()) {
                             long id = rs.getLong(1);
                             String payload = rs.getString(2);
-                            if (!dispatch(c, subscriber, topic, id, payload)) break; // keep order: retry next tick
-                            commitOffset(c, topic, id);
+                            if (!dispatch(c, subscriber, group, topic, id, payload)) break; // keep order: retry next tick
+                            commitOffset(c, group, topic, id);
                             handled++;
                         }
                     }
@@ -156,13 +157,14 @@ public class PostgresEventBus implements EventTransport, DisposableBean {
         }
     }
 
-    private boolean dispatch(Connection c, EventSubscriber s, String topic, long id, String payload) throws SQLException {
+    private boolean dispatch(Connection c, EventSubscriber s, String group, String topic, long id, String payload)
+            throws SQLException {
         try {
-            s.handle(payload);
-            failures.remove(id);
+            EventInbox.runAs(s.consumerName(), () -> s.handle(payload));
+            failures.remove(id * 31 + group.hashCode());
             return true;
         } catch (RuntimeException e) {
-            int attempts = failures.merge(id, 1, Integer::sum);
+            int attempts = failures.merge(id * 31 + group.hashCode(), 1, Integer::sum);
             if (attempts < MAX_ATTEMPTS) {
                 log.warn("Handler failed for event {} on {} (attempt {}/{}): {}", id, topic, attempts, MAX_ATTEMPTS, e.getMessage());
                 return false;
@@ -178,12 +180,17 @@ public class PostgresEventBus implements EventTransport, DisposableBean {
                 ps.setString(5, msg.substring(0, Math.min(1000, msg.length())));
                 ps.executeUpdate();
             }
-            failures.remove(id);
+            failures.remove(id * 31 + group.hashCode());
             return true; // skip the poison message
         }
     }
 
-    private void commitOffset(Connection c, String topic, long id) throws SQLException {
+    /** One consumer group per subscriber, so several subscribers can share a deployable. */
+    String consumerGroup(EventSubscriber s) {
+        return group + "/" + s.consumerName();
+    }
+
+    private void commitOffset(Connection c, String group, String topic, long id) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement(
                 "UPDATE eventbus.consumer_offsets SET last_id = ?, updated_at = now() WHERE consumer_group = ? AND topic = ?")) {
             ps.setLong(1, id);

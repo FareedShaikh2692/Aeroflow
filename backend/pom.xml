@@ -24,6 +24,7 @@
     <module>checkin-service</module>
     <module>notification-service</module>
     <module>reporting-service</module>
+    <module>all-in-one</module>
   </modules>
 
   <properties>
@@ -60,6 +61,13 @@
         <artifactId>common</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency><groupId>com.aeroflow</groupId><artifactId>auth-service</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.aeroflow</groupId><artifactId>flight-service</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.aeroflow</groupId><artifactId>passenger-service</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.aeroflow</groupId><artifactId>booking-service</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.aeroflow</groupId><artifactId>checkin-service</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.aeroflow</groupId><artifactId>notification-service</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.aeroflow</groupId><artifactId>reporting-service</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>io.jsonwebtoken</groupId><artifactId>jjwt-api</artifactId><version>${jjwt.version}</version></dependency>
       <dependency><groupId>io.jsonwebtoken</groupId><artifactId>jjwt-impl</artifactId><version>${jjwt.version}</version></dependency>
       <dependency><groupId>io.jsonwebtoken</groupId><artifactId>jjwt-jackson</artifactId><version>${jjwt.version}</version></dependency>
@@ -78,6 +86,12 @@
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
           <version>${jacoco.version}</version>
+        </plugin>
+        <plugin>
+          <!-- executable jar gets the "exec" classifier so service modules stay usable as libraries (all-in-one) -->
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <configuration><classifier>exec</classifier></configuration>
         </plugin>
       </plugins>
     </pluginManagement>

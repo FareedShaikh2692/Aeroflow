@@ -3,6 +3,8 @@ spring:
     name: auth-service
   config:
     import: classpath:aeroflow-common.yml
+  flyway:
+    locations: classpath:db/migration/auth-service
 server:
   port: ${PORT:8081}
 aeroflow:

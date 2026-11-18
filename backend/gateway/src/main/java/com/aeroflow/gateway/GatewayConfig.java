@@ -32,7 +32,7 @@ public class GatewayConfig {
         cfg.setAllowedOrigins(split(origins));
         if (!patterns.isBlank()) cfg.setAllowedOriginPatterns(split(patterns));
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        cfg.setAllowedHeaders(List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE, "Idempotency-Key", CORRELATION));
+        cfg.setAllowedHeaders(List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE, "Idempotency-Key", CORRELATION, HttpHeaders.IF_MATCH));
         cfg.setExposedHeaders(List.of(CORRELATION, HttpHeaders.CONTENT_DISPOSITION, "X-RateLimit-Remaining"));
         cfg.setAllowCredentials(false);
         cfg.setMaxAge(3600L);

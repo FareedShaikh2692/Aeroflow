@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 /** Synchronous query to booking-service (owner of booking data). */
-@Component
+@Component("flightServiceBookingClient")
 public class BookingClient {
     private final RestClient client;
 

@@ -3,6 +3,8 @@ spring:
     name: passenger-service
   config:
     import: classpath:aeroflow-common.yml
+  flyway:
+    locations: classpath:db/migration/passenger-service
 server:
   port: ${PORT:8083}
 aeroflow:

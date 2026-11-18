@@ -1,0 +1,28 @@
+# Overrides of aeroflow-common.yml for the single-deployable mode (imported after it, so these win).
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/aeroflow_single}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:8}
+      connection-init-sql: SET search_path TO auth, flight, passenger, booking, checkin, notification, reporting
+  flyway:
+    enabled: false            # SchemaPerServiceMigrations runs one Flyway per schema
+  jpa:
+    hibernate:
+      ddl-auto: none
+  cache:
+    type: simple              # in-memory cache instead of Redis
+  data:
+    redis:
+      repositories:
+        enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+management:
+  health:
+    redis:
+      enabled: false
+aeroflow:
+  events:
+    transport: ${EVENTS_TRANSPORT:postgres}   # Kafka-free by default

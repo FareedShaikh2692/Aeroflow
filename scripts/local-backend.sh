@@ -17,7 +17,7 @@ start() {
       main=$(grep -rl "SpringApplication.run" "$ROOT/backend/$s/src/main/java" | head -1 | sed -E 's#.*/src/main/java/##; s#\.java$##; s#/#.#g')
       launch=(-cp "$dir/classes:$(cat "$dir/classpath.txt")" "$main")
     else
-      launch=(-jar "$dir/app.jar")
+      launch=(-jar "$dir/app-exec.jar")
     fi
     nohup java -Xms64m -Xmx256m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 "${launch[@]}" > "$LOGS/$s.log" 2>&1 &
     echo $! > "$PIDS/$s.pid"; echo "started $s (pid $!)"

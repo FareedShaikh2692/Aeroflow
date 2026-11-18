@@ -12,5 +12,10 @@ public interface EventSubscriber {
 
     List<String> topics();
 
+    /** Stable consumer name; with the PostgreSQL bus each subscriber is its own consumer group. */
+    default String consumerName() {
+        return getClass().getSimpleName();
+    }
+
     void handle(String message);
 }

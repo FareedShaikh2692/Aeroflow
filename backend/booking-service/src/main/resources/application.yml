@@ -3,6 +3,8 @@ spring:
     name: booking-service
   config:
     import: classpath:aeroflow-common.yml
+  flyway:
+    locations: classpath:db/migration/booking-service
   data:
     redis:
       url: ${REDIS_URL:redis://localhost:6379}

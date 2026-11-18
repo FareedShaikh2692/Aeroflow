@@ -15,7 +15,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 /** Calls booking-service internal endpoints and maps its 4xx errors back to client errors. */
-@Component
+@Component("checkinServiceBookingClient")
 public class BookingClient {
     private final RestClient client;
     private final ObjectMapper mapper;

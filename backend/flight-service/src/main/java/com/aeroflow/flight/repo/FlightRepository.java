@@ -24,6 +24,13 @@ public interface FlightRepository extends JpaRepository<Flight, UUID>, JpaSpecif
 
     long countByStatus(FlightStatus status);
 
+    /** Flights whose (estimated) departure has passed and that are not yet in a terminal state. */
+    @Query("""
+           select f from Flight f where f.status in :statuses and f.departureTime > :notBefore
+             and f.departureTime < :now order by f.departureTime
+           """)
+    List<Flight> findDueForLifecycle(Instant now, Instant notBefore, java.util.Collection<FlightStatus> statuses);
+
     long countByDepartureTimeBetween(Instant from, Instant to);
 
     @Query("select f.status, count(f) from Flight f where f.departureTime >= :from and f.departureTime < :to group by f.status")

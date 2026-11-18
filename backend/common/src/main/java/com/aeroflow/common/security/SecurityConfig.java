@@ -31,11 +31,28 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwt, ObjectMapper mapper,
-                                            @Value("${aeroflow.security.public-paths:}") List<String> publicPaths)
+                                            @Value("${aeroflow.security.public-paths:}") List<String> publicPaths,
+                                            @Value("${aeroflow.cors.allowed-origins:}") List<String> corsOrigins,
+                                            @Value("${aeroflow.cors.allowed-origin-patterns:}") List<String> corsPatterns)
             throws Exception {
         String[] open = publicPaths.stream().filter(p -> !p.isBlank()).toArray(String[]::new);
         http.csrf(c -> c.disable())
-            .cors(c -> c.disable())
+            // CORS is normally terminated at the gateway; the single-deployable mode has no gateway.
+            .cors(c -> {
+                List<String> origins = corsOrigins.stream().filter(o -> !o.isBlank()).toList();
+                List<String> patterns = corsPatterns.stream().filter(o -> !o.isBlank()).toList();
+                if (origins.isEmpty() && patterns.isEmpty()) { c.disable(); return; }
+                org.springframework.web.cors.CorsConfiguration cfg = new org.springframework.web.cors.CorsConfiguration();
+                cfg.setAllowedOrigins(origins);
+                if (!patterns.isEmpty()) cfg.setAllowedOriginPatterns(patterns);
+                cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+                cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "Idempotency-Key", "X-Correlation-Id", "If-Match"));
+                cfg.setExposedHeaders(List.of("X-Correlation-Id", "Content-Disposition"));
+                cfg.setMaxAge(3600L);
+                org.springframework.web.cors.UrlBasedCorsConfigurationSource src = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+                src.registerCorsConfiguration("/**", cfg);
+                c.configurationSource(src);
+            })
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .httpBasic(b -> b.disable())
             .formLogin(f -> f.disable())

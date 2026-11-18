@@ -35,6 +35,12 @@ docs/openapi/       OpenAPI 3 specs exported from the running services
 .github/workflows/  CI/CD pipeline
 ```
 
+## Deployment modes
+| Mode | Where | Notes |
+|---|---|---|
+| Microservices (8 JVMs) | Docker Compose, Kubernetes, `infra/render/render.microservices.yaml` | gateway, Redis, Kafka or PostgreSQL event bus |
+| Single deployable (`backend/all-in-one`) | `render.yaml` (Render free + Neon free) | same modules in one JVM, PostgreSQL event bus, in-memory cache |
+
 ## Quick start
 
 ### Option A — Docker Compose (everything, one command)

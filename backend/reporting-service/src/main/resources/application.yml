@@ -3,6 +3,8 @@ spring:
     name: reporting-service
   config:
     import: classpath:aeroflow-common.yml
+  flyway:
+    locations: classpath:db/migration/reporting-service
 server:
   port: ${PORT:8087}
 aeroflow:

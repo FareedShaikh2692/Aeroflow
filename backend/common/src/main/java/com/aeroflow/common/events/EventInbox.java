@@ -9,6 +9,17 @@ import org.springframework.transaction.annotation.Transactional;
 /** Parses envelopes and guarantees each event id is handled at most once per service. */
 @Component
 public class EventInbox {
+    /** Set by the PostgreSQL bus so several subscribers in one deployable de-duplicate independently. */
+    private static final ThreadLocal<String> CONSUMER = new ThreadLocal<>();
+
+    public static void runAs(String consumer, Runnable action) {
+        CONSUMER.set(consumer);
+        try {
+            action.run();
+        } finally {
+            CONSUMER.remove();
+        }
+    }
     private final ProcessedEventRepository processed;
     private final ObjectMapper mapper;
 
@@ -28,8 +39,14 @@ public class EventInbox {
     /** @return true if this is the first time the event is seen (and records it). */
     @Transactional(propagation = Propagation.MANDATORY)
     public boolean firstDelivery(EventEnvelope env) {
-        if (processed.existsById(env.eventId())) return false;
-        processed.saveAndFlush(new ProcessedEvent(env.eventId()));
+        java.util.UUID key = dedupKey(env.eventId(), CONSUMER.get());
+        if (processed.existsById(key)) return false;
+        processed.saveAndFlush(new ProcessedEvent(key));
         return true;
+    }
+
+    static java.util.UUID dedupKey(java.util.UUID eventId, String consumer) {
+        return consumer == null ? eventId
+                : java.util.UUID.nameUUIDFromBytes((consumer + ":" + eventId).getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 }
