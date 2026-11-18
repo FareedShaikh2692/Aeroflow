@@ -3,6 +3,7 @@ import { LayoutDashboard, LogOut, User } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Logo } from "../domain";
+import { BackendStatusBanner } from "../BackendStatusBanner";
 import { Button } from "../ui/button";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "../ui/misc";
 
@@ -47,6 +48,7 @@ export function PortalLayout() {
           {user && !isStaff && <NavLink to="/my-trips" className={link}>My trips</NavLink>}
         </nav>
       </header>
+      <BackendStatusBanner />
       <main className="flex-1"><Outlet /></main>
       <footer className="border-t border-navy-100 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-xs text-navy-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">

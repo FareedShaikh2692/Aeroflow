@@ -54,6 +54,11 @@ describe("api client", () => {
     expect(f).toHaveBeenCalledTimes(1);
   });
 
+  it("reports a missing backend when the host answers with an HTML page", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("<!doctype html><html></html>", { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }));
+    await expect(api("/api/flights/search")).rejects.toMatchObject({ code: "BACKEND_UNAVAILABLE", status: 503 });
+  });
+
   it("maps network failures to a friendly error", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"));
     await expect(api("/api/x")).rejects.toMatchObject({ code: "NETWORK_ERROR" });

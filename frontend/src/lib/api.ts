@@ -50,8 +50,8 @@ export async function refreshSession(): Promise<TokenResponse | null> {
       const res = await fetch(`${API_BASE}/api/auth/refresh`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ refreshToken: rt }),
       });
-      if (!res.ok) {
-        tokenStore.set(null);
+      if (!res.ok || !(res.headers.get("content-type") ?? "").includes("json")) {
+        if (res.status === 401) tokenStore.set(null);
         return null;
       }
       const session = (await res.json()) as TokenResponse;
@@ -91,6 +91,8 @@ export async function api<T = unknown>(path: string, opts: RequestOptions = {}, 
     const refreshed = await refreshSession();
     if (refreshed) return api<T>(path, opts, true);
   }
+  // An HTML page (SPA fallback / static host 404) instead of JSON means no API is behind this URL.
+  if (!raw && (res.headers.get("content-type") ?? "").includes("text/html")) throw backendUnavailable();
   if (!res.ok) {
     let payload: { code?: string; message?: string; fieldErrors?: FieldError[]; traceId?: string } = {};
     try { payload = await res.json(); } catch { /* non-JSON error */ }
@@ -102,6 +104,13 @@ export async function api<T = unknown>(path: string, opts: RequestOptions = {}, 
   if (res.status === 204) return undefined as T;
   const text = await res.text();
   return (text ? JSON.parse(text) : undefined) as T;
+}
+
+export const BACKEND_UNAVAILABLE_MESSAGE =
+  "The AeroFlow API is not connected to this deployment yet, so live data (search, booking, sign-in) is unavailable.";
+
+function backendUnavailable() {
+  return new ApiError(503, "BACKEND_UNAVAILABLE", BACKEND_UNAVAILABLE_MESSAGE);
 }
 
 export function qs(params: Record<string, string | number | boolean | null | undefined>) {
